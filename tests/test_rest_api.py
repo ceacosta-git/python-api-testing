@@ -112,7 +112,7 @@ def test_delete_user_unauthorized():
     """
     create_response = create_user()
     user = create_response.json()
-    user_id = user["data"]["id"]
+    user_id = user.get("id")
 
     headers = {"Accept": "application/json",
                "Content-Type": "application/json",
@@ -120,10 +120,10 @@ def test_delete_user_unauthorized():
                }
 
     response = requests.delete(BASE_URI + f"/users/{user_id}", headers=headers)
-    deleted_user = response.json()
-    code = deleted_user["code"]
-    assert response.status_code == requests.codes.ok, "POST request is not OK"
-    assert code == requests.codes.unauthorized, "delete user with invalid authorization token response is not 401"
+    response_json = response.json()
+
+    assert response.status_code == requests.codes.unauthorized, "delete user with invalid authorization token response is not 401"
+    assert response_json.get("message") == "Invalid token", "Error is not caused by invalid token"
     delete_user(user_id)
 
 
@@ -134,12 +134,12 @@ def test_update_user_success(new_user_name):
     """
     create_response = create_user()
     user = create_response.json()
-    user_id = user["data"]["id"]
+    user_id = user.get("id")
 
     data = {"name": new_user_name}
     response = requests.put(BASE_URI + f"/users/{user_id}", headers=VALID_HEADERS, json=data)
     updated_user = response.json()
-    code = updated_user["code"]
-    assert response.status_code == requests.codes.ok, "PUT request is not OK"
-    assert code == requests.codes.ok, "update user response is not 200"
+
+    assert response.status_code  == requests.codes.ok, "update user response is not 200"
+    assert updated_user.get("name") == new_user_name, "update user response does not reflect updated name"
     delete_user(user_id)
