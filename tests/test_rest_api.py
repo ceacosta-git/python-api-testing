@@ -96,10 +96,14 @@ def test_create_user_fail_missing_email():
             "gender": "Male",
             "status": "Active"}
     response = requests.post(BASE_URI + "/users", headers=VALID_HEADERS, json=data)
-    user = response.json()
-    code = user["code"]
-    assert response.status_code == requests.codes.ok, "POST request is not OK"
-    assert code == requests.codes.unprocessable_entity, "create new user with missing email response is not 422"
+    errors = response.json()
+
+    assert response.status_code == requests.codes.unprocessable_entity,  "create new user with missing email response is not 422"
+    assert len(errors) == 1, "Got ore than 1 error"
+    field = errors[0].get("field")
+    assert field == "email", "Error was not due to email field"
+    message = errors[0].get("message")
+    assert message == "can't be blank"
 
 
 def test_delete_user_unauthorized():
